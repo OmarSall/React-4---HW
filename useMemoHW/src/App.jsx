@@ -1,35 +1,61 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import {useCallback, useEffect, useState, useMemo} from "react"
+import "./App.css"
+import UserList from "./components/UserList"
+
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [users, setUsers] = useState([])
+    const [posts, setPosts] = useState([])
+    const [comments, setComments] = useState([]);
+    const [search, setSearch] = useState("");
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    const fetchAllData = useCallback(async () => {
+        try {
+            const [usersResponse, postsResponse, commentsResponse] = await Promise.all([
+                fetch("https://jsonplaceholder.typicode.com/users"),
+                fetch("https://jsonplaceholder.typicode.com/posts"),
+                fetch("https://jsonplaceholder.typicode.com/comments"),
+            ]);
+
+            const [users, posts, comments] = await Promise.all([
+                usersResponse.json(),
+                postsResponse.json(),
+                commentsResponse.json(),
+            ]);
+
+            setUsers(users);
+            setPosts(posts);
+            setComments(comments);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    }, [])
+
+    useEffect(() => {
+        (async () => {
+            await fetchAllData();
+        })();
+    }, [fetchAllData]);
+
+    const filteredUsers = useMemo(() => {
+        return users.filter((user) =>
+            (user.name + user.email).toLowerCase().includes(search.toLowerCase()));
+    },[search, users]);
+
+    return (
+        <div>
+            <h1>Users and Posts</h1>
+            <input type="text"
+                   placeholder="Search by name or email"
+                   value={search}
+                   onChange={(event) => setSearch(event.target.value)}
+            />
+            <UserList users={filteredUsers}
+                      posts={posts}
+                      comments={comments}
+            />
+        </div>
+    )
 }
 
 export default App
