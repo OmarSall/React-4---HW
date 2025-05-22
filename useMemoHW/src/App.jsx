@@ -40,7 +40,7 @@ function App() {
     const filteredUsers = useMemo(() => {
         return users.filter((user) =>
             (user.name + user.email).toLowerCase().includes(search.toLowerCase()));
-    },[search, users]);
+    }, [search, users]);
 
     return (
         <div>
